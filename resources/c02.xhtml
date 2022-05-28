@@ -1,0 +1,476 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns:epub="http://www.idpf.org/2007/ops" xmlns="http://www.w3.org/1999/xhtml" epub:prefix="index: http://www.index.com/" xml:lang="en" lang="en">
+<head>
+<title>Chapter 2: Environment Setup and the Command Line</title>
+<link rel="stylesheet" href="NSTemplate_v1.css" type="text/css"/>
+</head>
+<body epub:type="bodymatter chapter">
+<section>
+<header>
+<h1 class="chapterTitle">
+<span class="ChapterNumber"><span epub:type="pagebreak" title="17" id="Page_17"/>2</span><br/>
+<span class="ChapterTitle">Environment Setup and the Command Line</span>
+</h1>
+</header>
+<figure class="opener"><img src="image_fi/book_art/circleart.png" alt=""/></figure><p class="ChapterIntro"><em>Environment setup</em> is the process of organizing your computer so you can write code. This involves installing any necessary tools, configuring them, and handling any hiccups during the setup. There is no single setup process because everyone has a different computer with a different operating system, version of the operating system, and version of the Python interpreter. Even so, this chapter describes some basic concepts to help you administer your own computer using the command line, environment variables, and filesystem.</p>
+<p>Learning these concepts and tools might seem like a headache. You want to write code, not poke around configuration settings or understand inscrutable console commands. But these skills will save you time in the long run. Ignoring error messages or randomly changing configuration settings to get your system working well enough might hide problems, but it won’t fix them. By taking the time to understand these issues now, you can prevent them from reoccurring.</p>
+<h2 id="h1-279660c02-0001"><span epub:type="pagebreak" title="18" id="Page_18"/>The Filesystem</h2>
+<p class="BodyFirst">The <em>filesystem</em> is how your operating system organizes data to be stored and retrieved. A file has two key properties: a <em>filename</em> (usually written as one word) and a <em>path</em>. The path specifies the location of a file on the computer. For example, a file on my Windows 10 laptop has the filename <em>project.docx</em> in the path <em>C:\Users\Al\Documents</em>. The part of the filename after the last period is the file’s <em>extension</em> and tells you a file’s type. The filename <em>project.docx</em> is a Word document, and <em>Users</em>, <em>Al</em>, and <em>Documents</em> all refer to <em>folders</em> (also called <em>directories</em>). Folders can contain files and other folders. For example, <em>project.docx</em> is in the <em>Documents</em> folder, which is in the <em>Al</em> folder, which is in the <em>Users</em> folder. <a id="figureanchor2-1" href="#figure2-1">Figure 2-1</a> shows this folder organization.</p>
+<figure>
+<img src="image_fi/279660c02/f02001.png" alt="f02001"/>
+<figcaption><p><a id="figure2-1" href="#figureanchor2-1">Figure 2-1:</a> A file in a hierarchy of folders</p></figcaption>
+</figure>
+<p>The <em>C:\</em> part of the path is the <em>root folder</em>, which contains all other folders. On Windows, the root folder is named <em>C:\</em> and is also called the <em>C:</em> drive. On macOS and Linux, the root folder is <em>/</em>. In this book, I’ll use the Windows-style root folder, <em>C:\</em>. If you’re entering the interactive shell examples on macOS or Linux, enter <em>/</em> instead.</p>
+<p>Additional volumes, such as a DVD drive or USB flash drive, will appear differently on different operating systems. On Windows, they appear as new, lettered root drives, such as <em>D:\</em> or <em>E:\</em>. On macOS, they appear as new folders within the <em>/Volumes</em> folder. On Linux, they appear as new folders within the <em>/mnt</em> (“mount”) folder. Note that folder names and filenames are not case sensitive on Windows and macOS, but they’re case sensitive on Linux.</p>
+<h3 id="h2-279660c02-0001">Paths in Python</h3>
+<p class="BodyFirst">On Windows, the backslash (\) separates folders and filenames, but on macOS and Linux, the  forward slash (/) separates them. Instead of writing code both ways to make your Python scripts cross-platform compatible, you can use the <code>pathlib</code> module and <code>/</code> operator instead.</p>
+<p>The typical way to import <code>pathlib</code> is with the statement <code>from pathlib import Path</code>. Because the <code>Path</code> class is the most frequently used class in <code/><span epub:type="pagebreak" title="19" id="Page_19"/>pathlib, this form lets you type <code>Path</code> instead of <code>pathlib.Path</code>. You can pass a string of a folder or filename to <code>Path()</code> to create a <code>Path</code> object of that folder or filename. As long as the leftmost object in an expression is a <code>Path</code> object, you can use the <code>/</code> operator to join together <code>Path</code> objects or strings. Enter the following into the interactive shell:</p>
+<pre><code>&gt;&gt;&gt; <b>from pathlib import Path</b>
+&gt;&gt;&gt; <b>Path('spam') / 'bacon' / 'eggs'</b>
+WindowsPath('spam/bacon/eggs')
+&gt;&gt;&gt; <b>Path('spam') / Path('bacon/eggs')</b>
+WindowsPath('spam/bacon/eggs')
+&gt;&gt;&gt; <b>Path('spam') / Path('bacon', 'eggs')</b>
+WindowsPath('spam/bacon/eggs')</code></pre>
+<p>Note that because I ran this code on a Windows machine, <code>Path()</code> returns <code>WindowsPath</code> objects. On macOS and Linux, a <code>PosixPath</code> object is returned. (POSIX is a set of standards for Unix-like operating systems and is beyond the scope of this book.) For our purposes, there’s no difference between these two types.</p>
+<p>You can pass a <code>Path</code> object to any function in the Python standard library that expects a filename. For example, the function call <code>open(Path('C:\\') / 'Users' / 'Al' / 'Desktop' / 'spam.py')</code> is equivalent to <code>open(r'C:\Users\Al\Desktop\spam.py')</code>.</p>
+<h3 id="h2-279660c02-0002">The Home Directory</h3>
+<p class="BodyFirst">All users have a folder called the <em>home folder</em> or <em>home directory</em> for their own files on the computer. You can get a <code>Path</code> object of the home folder by calling <code>Path.home()</code>:</p>
+<pre><code>&gt;&gt;&gt; <b>Path.home()</b>
+WindowsPath('C:/Users/Al')</code></pre>
+<p>The home directories are located in a set place depending on your operating system:</p>
+<ul>
+<li>On Windows, home directories are in <em>C:\Users</em>.</li>
+<li>On Mac, home directories are in <em>/Users</em>.</li>
+<li>On Linux, home directories are often in <em>/home</em>.</li>
+</ul>
+<p>Your scripts will almost certainly have permissions to read from and write to the files in your home directory, so it’s an ideal place to store the files that your Python programs will work with.</p>
+<h3 id="h2-279660c02-0003">The Current Working Directory</h3>
+<p class="BodyFirst">Every program that runs on your computer has a <em>current working directory</em> (<em>cwd</em>). Any filenames or paths that don’t begin with the root folder you can assume are in the cwd. Although “folder” is the more modern name for a <span epub:type="pagebreak" title="20" id="Page_20"/>directory, note that cwd (or just working directory) is the standard term, not “current working folder.”</p>
+<p>You can get the cwd as a <code>Path</code> object using the <code>Path.cwd()</code> function and change it using <code>os.chdir()</code>. Enter the following into the interactive shell:</p>
+<pre><code>&gt;&gt;&gt; <b>from pathlib import Path</b>
+&gt;&gt;&gt; <b>import os</b>
+<span class="CodeAnnotationHang">1</span> &gt;&gt;&gt; <b>Path.cwd()</b>
+WindowsPath('C:/Users/Al/AppData/Local/Programs/Python/Python38')
+<span class="CodeAnnotationHang">2</span> &gt;&gt;&gt; <b>os.chdir('C:\\Windows\\System32')</b>
+&gt;&gt;&gt; <b>Path.cwd()</b>
+WindowsPath('C:/Windows/System32')</code></pre>
+<p>Here, the cwd was set to <em>C:\Users\Al\AppData\Local\Programs\Python\Python38</em><span class="CodeAnnotation">1</span>, so the filename <em>project.docx</em> would refer to <em>C:\Users\Al\AppData\Local\Programs\Python\Python38\project.docx</em>. When we change the cwd to <em>C:\Windows\System32</em><span class="CodeAnnotation">2</span>, the filename <em>project.docx</em> would refer to <em>C:\Windows\System32\project.docx</em>.</p>
+<p>Python displays an error if you try to change to a directory that doesn’t exist:</p>
+<pre><code>&gt;&gt;&gt; <b>os.chdir('C:/ThisFolderDoesNotExist')</b>
+Traceback (most recent call last):
+  File "&lt;stdin&gt;", line 1, in &lt;module&gt;
+FileNotFoundError: [WinError 2] The system cannot find the file specified:
+'C:/ThisFolderDoesNotExist'</code></pre>
+<p>The <code>os.getcwd()</code> function in the <code>os</code> module is a former way of getting the cwd as a string.</p>
+<h3 id="h2-279660c02-0004">Absolute vs. Relative Paths</h3>
+<p class="BodyFirst">There are two ways to specify a file path:</p>
+<ul>
+<li>An absolute path, which always begins with the root folder</li>
+<li>A relative path, which is relative to the program’s cwd</li>
+</ul>
+<p>There are also the <em>dot</em> (.) and <em>dot-dot</em> (..) folders. These are not real folders but special names that you can use in a path. A single period (.) for a folder name is shorthand for “this directory.” Two periods (..) means “the parent folder.”</p>
+<p><a id="figureanchor2-2" href="#figure2-2">Figure 2-2</a> shows an example of some folders and files. When the cwd is set to <em>C:\bacon</em>, the relative paths for the other folders and files are set as they are in the figure.</p>
+<p>The <em>.\</em> at the start of a relative path is optional. For example, <em>.\spam.txt</em> and <em>spam.txt</em> refer to the same file.</p>
+<span epub:type="pagebreak" title="21" id="Page_21"/><figure>
+<img src="image_fi/279660c02/f02002.png" alt="f02002"/>
+<figcaption><p><a id="figure2-2" href="#figureanchor2-2">Figure 2-2:</a> The relative paths for folders and files in the working directory <em>C:\bacon</em></p></figcaption>
+</figure>
+<h2 id="h1-279660c02-0002">Programs and Processes</h2>
+<p class="BodyFirst">A <em>program</em> is any software application that you can run, such as a web browser, spreadsheet application, or word processor. A <em>process</em> is a running instance of a program. For example, <a id="figureanchor2-3" href="#figure2-3">Figure 2-3</a> shows five running processes of the same calculator program.</p>
+<figure>
+<img src="image_fi/279660c02/f02003.png" alt="f02003"/>
+<figcaption><p><a id="figure2-3" href="#figureanchor2-3">Figure 2-3:</a> One calculator program running multiple times as multiple, separate processes</p></figcaption>
+</figure>
+<p><span epub:type="pagebreak" title="22" id="Page_22"/>Processes remain separate from each other, even when running the same program. For example, if you ran several instances of a Python program at the same time, each process might have separate variable values. Every process, even processes running the same program, has its own cwd and environment variable settings. Generally speaking, a command line will run only one process at a time (although you can have multiple command lines open simultaneously). </p>
+<p>Each operating system has a way of viewing a list of running processes. On Windows, you can press <span class="KeyCaps">Ctrl</span>-<span class="KeyCaps">Shift</span>-<span class="KeyCaps">Esc</span> to bring up the Task Manager application. On macOS, you can run Applications<span class="MenuArrow">▶</span>Utilities<span class="MenuArrow">▶</span>Activity Monitor. On Ubuntu Linux, you can press <span class="KeyCaps">Ctrl</span>-<span class="KeyCaps">Alt</span>-<span class="KeyCaps">Del</span> to open an application also called the Task Manager. These task managers can force a running process to terminate if it’s unresponsive.</p>
+<h2 id="h1-279660c02-0003">The Command Line</h2>
+<p class="BodyFirst">The <em>command line</em> is a text-based program that lets you enter commands to interact with the operating system and run programs. You might also hear it called the command line interface (CLI, which rhymes with “fly”), command prompt, terminal, shell, or console. It provides an alternative to a <em>graphical user interface</em> (<em>GUI</em>, pronounced “gooey”), which allows the user to interact with the computer through more than just a text-based interface. A GUI presents visual information to a user to guide them through tasks more easily than the command line does. Most computer users treat the command line as an advanced feature and never touch it. Part of the intimidation factor is due to the complete lack of hints of how to use it; although a GUI might display a button showing you where to click, a blank terminal window doesn’t remind you what to type. </p>
+<p>But there are good reasons for becoming adept at using the command line. For one, setting up your environment often requires you to use the command line rather than the graphical windows. For another, entering commands can be much faster than clicking graphical windows with the mouse. Text-based commands are also less ambiguous than dragging an icon to some other icon. This lends them to automation better, because you can combine multiple specific commands into scripts to perform sophisticated operations. </p>
+<p>The command line program exists in an executable file on your computer. In this context, we often call it a shell or shell program. Running the shell program makes the terminal window appear:</p>
+<ul>
+<li>On Windows, the shell program is at <em>C:\Windows\System32\cmd.exe</em>.</li>
+<li>On macOS, the shell program is at <em>/bin/bash</em>.</li>
+<li>On Ubuntu Linux, the shell program is at <em>/bin/bash</em>.</li>
+</ul>
+<p>Over the years, programmers have created many shell programs for the Unix operating system, such as the Bourne Shell (in an executable file named <em>sh</em>) and later the Bourne-Again Shell (in an executable file named <em>Bash</em>). Linux uses Bash by default, whereas macOS uses the similar <span epub:type="pagebreak" title="23" id="Page_23"/>Zsh or Z shell in Catalina and later versions. Due to its different development history, Windows uses a shell named Command Prompt. All these programs do the same thing: they present a terminal window with a text-based CLI into which the user enters commands and runs programs.</p>
+<p>In this section, you’ll learn some of the command line’s general concepts and common commands. You could master a large number of cryptic commands to become a real sorcerer, but you only need to know about a dozen or so to solve most problems. The exact command names might vary slightly on different operating systems, but the underlying concepts are the same.</p>
+<h3 id="h2-279660c02-0005">Opening a Terminal Window</h3>
+<p class="BodyFirst">To open a terminal window, do the following:</p>
+<ul>
+<li>On Windows, click the Start button, type <code class="bold">Command Prompt</code>, and then press <span class="KeyCaps">Enter</span>.</li>
+<li>On macOS, click the <code class="bold">Spotlight</code> icon in the upper-right corner, type <code class="bold">Terminal</code><b/>, and then press <span class="KeyCaps">Enter</span>.</li>
+<li>On Ubuntu Linux, press the <span class="KeyCaps">Win</span> key to bring up Dash, type <code class="bold">Terminal</code><b/>, and press <span class="KeyCaps">Enter</span>. Alternatively, use the keyboard shortcut <span class="KeyCaps">Ctrl</span>-<span class="KeyCaps">Alt</span>-T.</li>
+</ul>
+<p>Like the interactive shell, which displays a <code>&gt;&gt;&gt;</code> prompt, the terminal displays a <em>shell prompt</em> at which you can enter commands. On Windows, the prompt will be the full path to the current folder you are in:</p>
+<pre><code>C:\Users\Al&gt;<b>your commands go here</b></code></pre>
+<p>On macOS, the prompt shows your computer’s name, a colon, and the cwd with your home folder represented as a tilde (<code>~</code>). After this is your username followed by a dollar sign (<code>$</code>):</p>
+<pre><code>Als-MacBook-Pro:~ al$ <b>your commands go here</b></code></pre>
+<p>On Ubuntu Linux, the prompt is similar to the macOS prompt except it begins with the username and an at (<code>@</code>) symbol:</p>
+<pre><code>al@al-VirtualBox:~$ <b>your commands go here</b></code></pre>
+<p>Many books and tutorials represent the command line prompt as just <code>$</code> to simplify their examples. It’s possible to customize these prompts, but doing so is beyond the scope of this book. </p>
+<h3 id="h2-279660c02-0006">Running Programs from the Command Line</h3>
+<p class="BodyFirst">To run a program or command, enter its name into the command line. Let’s run the default calculator program that comes with the operating system. Enter the following into the command line:</p>
+<ul>
+<li>On Windows, enter <code class="bold">calc.exe</code>.</li>
+<li><span epub:type="pagebreak" title="24" id="Page_24"/>On macOS, enter <code class="bold">open -a Calculator</code>. (Technically, this runs the <code>open</code> program, which then runs the Calculator program.)</li>
+<li>On Linux, enter <code class="bold">gnome-calculator</code>.</li>
+</ul>
+<p>Program names and commands are case sensitive on Linux but case insensitive on Windows and macOS. This means that even though you must type <code>gnome-calculator</code> on Linux, you could type <code>Calc.exe </code>on Windows and <code>OPEN –a Calculator </code>on macOS.</p>
+<p>Entering these calculator program names into the command line is equivalent to running the Calculator program from the Start menu, Finder, or Dash. These calculator program names work as commands because the <em>calc.exe</em>, <em>open</em>, and <em>gnome-calculator</em> programs exist in folders that are included in the <code>PATH</code> environment variables. “Environment Variables and PATH” on page 35 explains this further. But suffice it to say that when you enter a program name on the command line, the shell checks whether a program with that name exists in one of the folders listed in <code>PATH</code>. On Windows, the shell looks for the program in the cwd (which you can see in the prompt) before checking the folders in <code>PATH</code>. To tell the command line on macOS and Linux to first check the cwd, you must enter <code>./</code> before the filename.</p>
+<p>If the program isn’t in a folder listed in <code>PATH</code>, you have two options:</p>
+<ul>
+<li>Use the <code>cd</code> command to change the cwd to the folder that contains the program, and then enter the program name. For example, you could enter the following two commands:
+<pre><code><code>cd C:\Windows\System32</code>
+<code>calc.exe</code></code></pre>
+</li>
+<li>Enter the full file path for the executable program file. For example, instead of entering <code>calc.exe</code>, you could enter <code>C:\Windows\System32\calc.exe</code>.</li>
+</ul>
+<p>On Windows, if a program ends with the file extension <em>.exe</em> or <em>.bat</em>, including the extension is optional: entering <code>calc</code> does the same thing as entering <code>calc.exe</code>. Executable programs in macOS and Linux often don’t have file extensions marking them as executable; rather, they have the executable permission set. “Running Python Programs Without the Command Line” on page 39 has more information.</p>
+<h3 id="h2-279660c02-0007">Using Command Line Arguments</h3>
+<p class="BodyFirst"><em>Command line arguments</em> are bits of text you enter after the command name. Like the arguments passed to a Python function call, they provide the command with specific options or additional directions. For example, when you run the command <code>cd C:\Users</code>, the <code>C:\Users</code> part is an argument to the <code>cd</code> command that tells <code>cd</code> to which folder to change the cwd. Or, when you run a Python script from a terminal window with the <code>python yourScript.py </code>command, the <code>yourScript.py</code> part is an argument telling the <code>python</code> program what file to look in for the instructions it should carry out.</p>
+<p><span epub:type="pagebreak" title="25" id="Page_25"/><em>Command line options</em> (also called flags, switches, or simply options) are a single-letter or short-word command line arguments. On Windows, command line options often begin with a forward slash (<code>/</code>); on macOS and Linux, they begin with a single dash (<code>–</code>) or double dash (<code>--</code>). You already used the <code>–a</code> option when running the macOS command <code>open –a Calculator</code>. Command line options are often case sensitive on macOS and Linux but are case insensitive on Windows, and we separate multiple command line options with spaces.</p>
+<p>Folders and filenames are common command line arguments. If the folder or filename has a space as part of its name, enclose the name in double quotes to avoid confusing the command line. For example, if you want to change directories to a folder called <em>Vacation Photos</em>, entering <code>cd Vacation Photos</code> would make the command line think you were passing two arguments, <code>Vacation</code> and <code>Photos</code>. Instead, you enter <code>cd "Vacation Photos"</code>:</p>
+<pre><code>C:\Users\Al&gt;<b>cd "Vacation Photos"</b>
+
+C:\Users\Al\Vacation Photos&gt;</code></pre>
+<p>Another common argument for many commands is <code>--help</code> on macOS and Linux and <code>/?</code> on Windows. These bring up information associated with the command. For example, if you run <code>cd /?</code> on Windows, the shell tells you what the <code>cd</code> command does and lists other command line arguments for it:</p>
+<pre><code>C:\Users\Al&gt;<b>cd /?</b>
+Displays the name of or changes the current directory.
+
+CHDIR [/D] [drive:][path]
+CHDIR [..]
+CD [/D] [drive:][path]
+CD [..]
+
+  ..   Specifies that you want to change to the parent directory.
+
+Type CD drive: to display the current directory in the specified drive.
+Type CD without parameters to display the current drive and directory.
+
+Use the /D switch to change current drive in addition to changing current
+directory for a drive.
+<var>--snip—</var></code></pre>
+<p>This help information tells us that the Windows <code>cd</code> command also goes by the name <code>chdir</code>. (Most people won’t type <code>chdir</code> when the shorter <code>cd</code> command does the same thing.) The square brackets contain optional arguments. For example, <code>CD [/D] [drive:][path]</code> tells you that you could specify a drive or path using the <code>/D</code> option.</p>
+<p>Unfortunately, although the <code>/?</code> and <code>--help</code> information for commands provides reminders for experienced users, the explanations can often be cryptic. They’re not good resources for beginners. You’re better off using a <span epub:type="pagebreak" title="26" id="Page_26"/>book or web tutorial instead, such as <em>The Linux Command Line,</em> 2nd Edition (2019) by William Shotts, <em>Linux Basics for Hackers</em> (2018) by OccupyTheWeb, or <em>PowerShell for Sysadmins </em>(2020) by Adam Bertram, all from No Starch Press.</p>
+<h3 id="h2-279660c02-0008">Running Python Code from the Command Line with -c</h3>
+<p class="BodyFirst">If you need to run a small amount of throwaway Python code that you run once and then discard, pass the <code>–c</code> switch to <code>python.exe</code> on Windows or <code>python3</code> on macOS and Linux. The code to run should come after the <code>–c</code> switch, enclosed in double quotes. For example, enter the following into the terminal window:</p>
+<pre><code>C:\Users\Al&gt;<b>python -c "print('Hello, world')"</b>
+Hello, world</code></pre>
+<p>The <code>–c</code> switch is handy when you want to see the results of a single Python instruction and don’t want to waste time entering the interactive shell. For example, you could quickly display the output of the <code>help()</code> function and then return to the command line:</p>
+<pre><code>C:\Users\Al&gt;<b>python -c "help(len)"</b>
+Help on built-in function len in module builtins:
+
+len(obj, /)
+    Return the number of items in a container.
+
+C:\Users\Al&gt;</code></pre>
+<h3 id="h2-279660c02-0009">Running Python Programs from the Command Line</h3>
+<p class="BodyFirst">Python programs are text files that have the <em>.py</em> file extension. They’re not executable files; rather, the Python interpreter reads these files and carries out the Python instructions in them. On Windows, the interpreter’s executable file is <em>python.exe</em>. On macOS and Linux, it’s <em>python3</em> (the original <em>python</em> file contains the Python version 2 interpreter). Running the commands <code>python yourScript.py</code> or <code>python3 yourScript.py</code> will run the Python instructions saved in a file named <em>yourScript.py</em>.</p>
+<h3 id="h2-279660c02-0010">Running the py.exe Program</h3>
+<p class="BodyFirst">On Windows, Python installs a <em>py.exe</em> program in the <em>C:\Windows</em> folder. This program is identical to <em>python.exe</em> but accepts an additional command line argument that lets you run any Python version installed on your computer. You can run the <code>py</code> command from any folder, because the <em>C:\Windows</em> folder is included in the <code>PATH</code> environment variable. If you have multiple Python versions installed, running <code>py</code> automatically runs the latest version installed on your computer. You can also pass a <code>-3</code> or <code>-2</code> command line argument to run the latest Python version 3 or version 2 installed, respectively. Or you could enter a more specific version number, such as <code>-3.6</code> or <code>-2.7</code>, to run that <span epub:type="pagebreak" title="27" id="Page_27"/>particular Python installation. After the version switch, you can pass all the same command line arguments to <em>py.exe</em> as you do to <em>python.exe</em>. Run the following from the Windows command line:</p>
+<pre><code>C:\Users\Al&gt;<b>py -3.6 -c "import sys;print(sys.version)"</b>
+3.6.6 (v3.6.6:4cf1f54eb7, Jun 27 2018, 03:37:03) [MSC v.1900 64 bit (AMD64)]
+
+C:\Users\Al&gt;<b>py -2.7</b>
+Python 2.7.14 (v2.7.14:84471935ed, Sep 16 2017, 20:25:58) [MSC v.1500 64 bit (AMD64)] on win32
+Type "help", "copyright", "credits" or "license" for more information.
+&gt;&gt;&gt;</code></pre>
+<p>The <em>py.exe</em> program is helpful when you have multiple Python versions installed on your Windows machine and need to run a specific version.</p>
+<h3 id="h2-279660c02-0011">Running Commands from a Python Program</h3>
+<p class="BodyFirst">Python’s <code>subprocess.run()</code> function, found in the <code>subprocess</code> module, can run shell commands within your Python program and then present the command output as a string. For example, the following code runs the <code>ls –al</code> command:</p>
+<pre><code>&gt;&gt;&gt; <b>import subprocess, locale</b>
+<span class="CodeAnnotationHang">1</span> &gt;&gt;&gt; <b>procObj = subprocess.run(['ls', '-al'], stdout=subprocess.PIPE)</b>
+<span class="CodeAnnotationHang">2</span> &gt;&gt;&gt; <b>outputStr = procObj.stdout.decode(locale.getdefaultlocale()[1])</b>
+&gt;&gt;&gt; <b>print(outputStr)</b>
+total 8
+drwxr-xr-x  2 al al 4096 Aug  6 21:37 .
+drwxr-xr-x 17 al al 4096 Aug  6 21:37 ..
+-rw-r--r--  1 al al    0 Aug  5 15:59 spam.py</code></pre>
+<p>We pass the <code>['ls', '-al']</code> list to <code>subprocess.run()</code><span class="CodeAnnotation">1</span>. This list contains the command name <code>ls</code>, followed by its arguments, as individual strings. Note that passing <code>['ls –al'] </code>wouldn’t work. We store the command’s output as a string in <code>outputStr</code><span class="CodeAnnotation">2</span>. Online documentation for <code>subprocess.run()</code> and <code>locale.getdefaultlocale()</code> will give you a better idea of how these functions work, but they make the code work on any operating system running Python.</p>
+<h3 id="h2-279660c02-0012">Minimizing Typing with Tab Completion</h3>
+<p class="BodyFirst">Because advanced users enter commands into computers for hours a day, modern command lines offer features to minimize the amount of typing necessary. The <em>tab completion</em> feature (also called command line completion or autocomplete) lets a user type the first few characters of a folder or filename and then press the <span class="KeyCaps">Tab</span> key to have the shell fill in the rest of the name.</p>
+<p>For example, when you type <code>cd c:\u</code> and press <span class="KeyCaps">Tab </span>on Windows, the current command checks which folders or files in <em>C:\</em> begin with <em>u</em> and tab completes to <code>c:\Users</code>. It corrects the lowercase <em>u</em> to <em>U</em> as well. (On macOS and Linux, tab completion doesn’t correct the casing.) If multiple folders <span epub:type="pagebreak" title="28" id="Page_28"/>or filenames begin with <em>U</em> in the <em>C:\</em> folder, you can continue to press <span class="KeyCaps">Tab</span> to cycle through all of them. To narrow down the number of matches, you could also type <code>cd c:\us</code>, which filters the possibilities to folders and filenames that begin with <em>us</em>. </p>
+<p>Pressing the <span class="KeyCaps">Tab</span> key multiple times works on macOS and Linux as well. In the following example, the user typed <code>cd D</code>, followed by <span class="KeyCaps">Tab</span> twice:</p>
+<pre><code>al@al-VirtualBox:~$ <b>cd D</b>
+Desktop/   Documents/ Downloads/
+al@al-VirtualBox:~$ cd D</code></pre>
+<p>Pressing <span class="KeyCaps">Tab</span> twice after typing the <code>D</code> causes the shell to display all the possible matches. The shell gives you a new prompt with the command as you’ve typed it so far. At this point, you could type, say, <code>e</code> and then press <span class="KeyCaps">Tab</span> to have the shell complete the <code>cd Desktop/</code> command.</p>
+<p>Tab completion is so useful that many GUI IDEs and text editors include this feature as well. Unlike command lines, these GUI programs usually display a small menu under your words as you type them, letting you select one to autocomplete the rest of the command.</p>
+<h3 id="h2-279660c02-0013">Viewing the Command History</h3>
+<p class="BodyFirst">In their <em>command history</em>, modern shells also remember the commands you’ve entered. Pressing the up arrow key in the terminal fills the command line with the last command you entered. You can continue to press the up arrow key to find earlier commands, or press the down arrow key to return to more recent commands. If you want to cancel the command currently in the prompt and start from a fresh prompt, press <span class="KeyCaps">Ctrl</span>-C.</p>
+<p>On Windows, you can view the command history by running <code>doskey /history</code>. (The oddly named <em>doskey</em> program goes back to Microsoft’s pre-Windows operating system, MS-DOS.) On macOS and Linux, you can view the command history by running the <code>history</code> command.</p>
+<h3 id="h2-279660c02-0014">Working with Common Commands</h3>
+<p class="BodyFirst">This section contains a short list of the common commands you’ll use in the command line. There are far more commands and arguments than listed here, but you can treat these as the bare minimum you’ll need to navigate the command line. </p>
+<p>Command line arguments for the commands in this section appear between square brackets. For example, <code>cd </code><var>[destination folder]</var> means you should enter <code>cd</code>, followed by the name of a new folder. </p>
+<h4 id="h3-279660c02-0001">Match Folder and Filenames with Wildcard Characters</h4>
+<p class="BodyFirst">Many commands accept folder and filenames as command line arguments. Often, these commands also accept names with the wildcard characters <code>*</code> and <code>?</code>, allowing you to specify multiple matching files. The <code>*</code> character <span epub:type="pagebreak" title="29" id="Page_29"/>matches any number of characters, whereas the <code>?</code> character matches any single character. We call expressions that use the <code>*</code> and <code>?</code> wildcard characters <em>glob patterns</em> (short for “global patterns”). </p>
+<p>Glob patterns let you specify patterns of filenames. For example, you could run the <code>dir</code> or <code>ls</code> command to display all the files and folders in the cwd. But if you wanted to see just the Python files, <code>dir *.py</code> or <code>ls *.py</code> would display only the files that end in <em>.py</em>. The glob pattern <code>*.py</code> means “any group of characters, followed by <code>.py</code>”:</p>
+<pre><code>C:\Users\Al&gt;<b>dir *.py</b>
+ Volume in drive C is Windows
+ Volume Serial Number is DFF3-8658
+
+ Directory of C:\Users\Al
+
+03/24/2019  10:45 PM             8,399 conwaygameoflife.py
+03/24/2019  11:00 PM             7,896 test1.py
+10/29/2019  08:18 PM            21,254 wizcoin.py
+               3 File(s)         37,549 bytes
+               0 Dir(s)  506,300,776,448 bytes free</code></pre>
+<p>The glob pattern <code>records201?.txt</code> means “<code>records201</code>, followed by any single character, followed by <code>.txt</code>.” This would match record files for the years <em>records2010.txt</em> to <em>records2019.txt</em> (as well as filenames, such as <em>records201X.txt</em>). The glob pattern <code>records20??.txt</code> would match any two characters, such as <em>records2021.txt</em> or <em>records20AB.txt</em>.</p>
+<h4 id="h3-279660c02-0002">Change Directories with cd</h4>
+<p class="BodyFirst">Running <code>cd </code><var>[destination folder]</var> changes the shell’s cwd to the destination folder:</p>
+<pre><code>C:\Users\Al&gt;<b>cd Desktop</b>
+
+C:\Users\Al\Desktop&gt;</code></pre>
+<p>The shell displays the cwd as part of its prompt, and any folders or files used in commands will be interpreted relative to this directory. </p>
+<p>If the folder has spaces in its name, enclose the name in double quotes. To change the cwd to the user’s home folder, enter <code class="bold">cd ~</code> on macOS and Linux, and <code class="bold">cd %USERPROFILE%</code> on Windows.</p>
+<p>On Windows, if you also want to change the current drive, you’ll first need to enter the drive name as a separate command:</p>
+<pre><code>C:\Users\Al&gt;<b>d:</b>
+
+D:\&gt;<b>cd BackupFiles</b>
+
+D:\BackupFiles&gt;</code></pre>
+<p><span epub:type="pagebreak" title="30" id="Page_30"/>To change to the parent directory of the cwd, use the <code>..</code> folder name:</p>
+<pre><code>C:\Users\Al&gt;<b>cd ..</b>
+
+C:\Users&gt;</code></pre>
+<h4 id="h3-279660c02-0003">List Folder Contents with dir and ls</h4>
+<p class="BodyFirst">On Windows, the <code>dir</code> command displays the folders and files in the cwd. The <code>ls</code> command does the same thing on macOS and Linux. You can display the contents of another folder by running <code>dir </code><var>[another folder]</var> or <code>ls </code><var>[another folder]</var>. </p>
+<p>The <code>-l </code>and <code>-a</code> switches are useful arguments for the <code>ls</code> command. By default, <code>ls</code> displays only the names of files and folders. To display a long listing format that includes file size, permissions, last modification timestamps, and other information, use <code>–l</code>. By convention, the macOS and Linux operating systems treat files beginning with a period as configuration files and keep them hidden from normal commands. You can use <code>-a</code> to make <code>ls</code> display all files, including hidden ones. To display both the long listing format and all files, combine the switches as <code>ls -al</code>. Here’s an example in a macOS or Linux terminal window:</p>
+<pre><code>al@ubuntu:~$ <b>ls</b>
+Desktop    Downloads         mu_code  Pictures  snap       Videos
+Documents  examples.desktop  Music    Public    Templates
+al@ubuntu:~$ <b>ls -al</b>
+total 112
+drwxr-xr-x 18 al   al   4096 Aug  4 18:47 .
+drwxr-xr-x  3 root root 4096 Jun 17 18:11 ..
+-rw-------  1 al   al   5157 Aug  2 20:43 .bash_history
+-rw-r--r--  1 al   al    220 Jun 17 18:11 .bash_logout
+-rw-r--r--  1 al   al   3771 Jun 17 18:11 .bashrc
+drwx------ 17 al   al   4096 Jul 30 10:16 .cache
+drwx------ 14 al   al   4096 Jun 19 15:04 .config
+drwxr-xr-x  2 al   al   4096 Aug  4 17:33 Desktop
+<var>--snip--</var></code></pre>
+<p>The Windows analog to <code>ls –al</code> is the <code>dir</code> command. Here’s an example in a Windows terminal window:</p>
+<pre><code>C:\Users\Al&gt;<b>dir</b>
+ Volume in drive C is Windows
+ Volume Serial Number is DFF3-8658
+
+ Directory of C:\Users\Al
+
+06/12/2019  05:18 PM    &lt;DIR&gt;          .
+06/12/2019  05:18 PM    &lt;DIR&gt;          ..
+12/04/2018  07:16 PM    &lt;DIR&gt;          .android
+<var>--snip--</var>
+08/31/2018  12:47 AM            14,618 projectz.ipynb
+10/29/2014  04:34 PM           121,474 foo.jpg</code></pre>
+<h4 id="h3-279660c02-0004"><span epub:type="pagebreak" title="31" id="Page_31"/>List Subfolder Contents with dir /s and find</h4>
+<p class="BodyFirst">On Windows, running <code>dir /s</code> displays the cwd’s folders and their subfolders. For example, the following command displays every <em>.py</em> file in my <em>C:\github\ezgmail</em> folder and all of its subfolders:</p>
+<pre><code>C:\github\ezgmail&gt;<b>dir /s *.py</b>
+ Volume in drive C is Windows
+ Volume Serial Number is DEE0-8982
+
+ Directory of C:\github\ezgmail
+
+06/17/2019  06:58 AM             1,396 setup.py
+               1 File(s)          1,396 bytes
+
+ Directory of C:\github\ezgmail\docs
+
+12/07/2018  09:43 PM             5,504 conf.py
+               1 File(s)          5,504 bytes
+
+ Directory of C:\github\ezgmail\src\ezgmail
+
+06/23/2019  07:45 PM            23,565 __init__.py
+12/07/2018  09:43 PM                56 __main__.py
+               2 File(s)         23,621 bytes
+
+     Total Files Listed:
+               4 File(s)         30,521 bytes
+               0 Dir(s)  505,407,283,200 bytes free</code></pre>
+<p>The <code>find . –name</code> command does the same thing on macOS and Linux: </p>
+<pre><code>al@ubuntu:~/Desktop$ <b>find . -name "*.py"</b>
+./someSubFolder/eggs.py
+./someSubFolder/bacon.py
+./spam.py</code></pre>
+<p>The <code>. </code>tells <code>find</code> to start searching in the cwd. The <code>–name</code> option tells <code>find</code> to find folders and filenames by name. The <code>"*.py"</code> tells <code>find</code> to display folders and files with names that match the <code>*.py</code> pattern. Note that the <code>find</code> command requires the argument after <code>–name</code> to be enclosed in double quotes.</p>
+<h4 id="h3-279660c02-0005">Copy Files and Folders with copy and cp</h4>
+<p class="BodyFirst">To create a duplicate of a file or folder in a different directory, run <code class="bold">copy </code><var class="bold">[source file or folder]</var><code class="bold"/><var class="bold">[destination folder]</var> or <code class="bold">cp </code><var class="bold">[source file or folder] [destination folder]</var>. Here’s an example in a Linux terminal window:</p>
+<pre><code>al@ubuntu:~/someFolder$ <b>ls</b>
+hello.py  someSubFolder
+al@ubuntu:~/someFolder$ <b>cp hello.py someSubFolder</b>
+al@ubuntu:~/someFolder$ <b>cd someSubFolder</b>
+al@ubuntu:~/someFolder/someSubFolder$ <b>ls</b>
+hello.py</code></pre>
+<aside epub:type="sidebar">
+<div class="top hr"><hr/></div>
+<section class="box">
+<h2><span epub:type="pagebreak" title="32" id="Page_32"/>Short Command Names</h2>
+<p class="BoxBodyFirst">When I started learning the Linux operating system, I was surprised to find that the Windows <code>copy</code> command I knew well was named <code>cp</code> on Linux. The name “copy” was much more readable than “cp.” Was a terse, cryptic name really worth saving two characters’ worth of typing?</p>
+<p>As I gained more experienced in the command line, I realized the answer is a firm “yes.” We read source code more often than we write it, so using verbose names for variables and functions helps. But we type commands into the command line more often than we read them, so in this case, the opposite is true: short command names make the command line easier to use and reduce strain on your wrists.</p>
+<div class="bottom hr"><hr/></div>
+</section>
+</aside>
+<h4 id="h3-279660c02-0006">Move Files and Folders with move and mv</h4>
+<p class="BodyFirst">On Windows, you can move a source file or folder to a destination folder by running <code>move </code><var>[source file or folder] [destination folder]</var>. The <code>mv </code><var>[source file or folder]</var><code/><var>[destination folder]</var> command does the same thing on macOS and Linux. </p>
+<p>Here’s an example in a Linux terminal window:</p>
+<pre><code>al@ubuntu:~/someFolder$ <b>ls</b>
+hello.py  someSubFolder
+al@ubuntu:~/someFolder$ <b>mv hello.py someSubFolder</b>
+al@ubuntu:~/someFolder$ <b>ls</b>
+someSubFolder
+al@ubuntu:~/someFolder$ <b>cd someSubFolder/</b>
+al@ubuntu:~/someFolder/someSubFolder$ <b>ls</b>
+hello.py</code></pre>
+<p>The <em>hello.py</em> file has moved from <em>~/someFolder</em> to <em>~/someFolder/someSubFolder</em> and no longer appears in its original location.</p>
+<h4 id="h3-279660c02-0007">Rename Files and Folders with ren and mv</h4>
+<p class="BodyFirst">Running <code>ren </code><var>[file or folder] [new name]</var> renames the file or folder on Windows, and <code>mv </code><var>[file or folder] [new name]</var> does so on macOS and Linux. Note that you can use the <code>mv</code> command on macOS and Linux for moving <em>and</em> renaming a file. If you supply the name of an existing folder for the second argument, the <code>mv</code> command moves the file or folder there. If you supply a name that doesn’t match an existing file or folder, the <code>mv</code> command renames the file or folder. Here’s an example in a Linux terminal window:</p>
+<pre><code>al@ubuntu:~/someFolder$ <b>ls</b>
+hello.py  someSubFolder
+<span epub:type="pagebreak" title="33" id="Page_33"/>al@ubuntu:~/someFolder$ <b>mv hello.py goodbye.py</b>
+al@ubuntu:~/someFolder$ <b>ls</b>
+goodbye.py  someSubFolder</code></pre>
+<p>The <em>hello.py</em> file now has the name <em>goodbye.py</em>.</p>
+<h4 id="h3-279660c02-0008">Delete Files and Folders with del and rm</h4>
+<p class="BodyFirst">To delete a file or folder on Windows, run <code>del </code><var class="bold">[file or folder]</var>. To do so on macOS and Linux, run <code class="bold">rm </code><var class="bold">[file]</var> (<code class="bold">rm</code> is short for, remove). </p>
+<p>These two delete commands have some slight differences. On Windows, running <code>del</code> on a folder deletes all of its files, but not its subfolders. The <code>del</code> command also won’t delete the source folder; you must do so with the <code>rd</code> or <code>rmdir</code> commands, which I’ll explain in “Delete Folders with rd and rmdir” on page 34. Additionally, running <code>del </code><var>[folder]</var> won’t delete any files inside the subfolders of the source folder. You can delete the files by running <code>del /s /q </code><var>[folder]</var>. The <code>/s</code> runs the <code>del </code>command on the subfolders, and the <code>/q</code> essentially means “be quiet and don’t ask me for confirmation.” <a id="figureanchor2-4" href="#figure2-4">Figure 2-4</a> illustrates this difference.</p>
+<figure>
+<img src="image_fi/279660c02/f02004.png" alt="f02004"/>
+<figcaption><p><a id="figure2-4" href="#figureanchor2-4">Figure 2-4:</a> The files are deleted in these example folders when you run <code>del delicious</code> (left) or <code>del /s /q</code> delicious (right).</p></figcaption>
+</figure>
+<p>On macOS and Linux, you can’t use the <code>rm</code> command to delete folders. But you can run <code>rm –r </code><var>[folder]</var> to delete a folder and all of its contents. On Windows, <code>rd /s /q <var>[folder]</var></code> will do the same thing. <a id="figureanchor2-5" href="#figure2-5">Figure 2-5</a> illustrates this task.</p>
+<span epub:type="pagebreak" title="34" id="Page_34"/><figure>
+<img src="image_fi/279660c02/f02005.png" alt="f02005"/>
+<figcaption><p><a id="figure2-5" href="#figureanchor2-5">Figure 2-5:</a> The files are deleted in these example folders when you run <code>rd /s /q delicious</code> or <code>rm –r delicious</code>.</p></figcaption>
+</figure>
+<h4 id="h3-279660c02-0009">Make Folders with md and mkdir</h4>
+<p class="BodyFirst">Running <code>md </code><var>[new folder]</var> creates a new, empty folder on Windows, and running <code>mkdir </code><var>[new folder]</var> does so on macOS and Linux. The <code>mkdir</code> command also works on Windows, but <code>md</code> is easier to type.</p>
+<p>Here’s an example in a Linux terminal window:</p>
+<pre><code>al@ubuntu:~/Desktop$ <b>mkdir yourScripts</b>
+al@ubuntu:~/Desktop$ <b>cd yourScripts</b>
+<span class="CodeAnnotationHang">1</span> al@ubuntu:~/Desktop/yourScripts$ ls
+al@ubuntu:~/Desktop/yourScripts$</code></pre>
+<p>Notice that the newly created <em>yourScripts</em> folder is empty; nothing appears when we run the <code>ls</code> command to list the folder’s contents <span class="CodeAnnotation">1</span>.</p>
+<h4 id="h3-279660c02-0010">Delete Folders with rd and rmdir</h4>
+<p class="BodyFirst">Running <code>rd </code><var>[source folder]</var> deletes the source folder on Windows, and <code>rmdir </code><var>[source folder]</var> deletes the source folder on macOS and Linux. Like <code>mkdir</code>, the <code>rmdir</code> command also works on Windows, but <code>rd</code> is easier to type. The folder must be empty before you can remove it.</p>
+<p>Here’s an example in a Linux terminal window:</p>
+<pre><code>al@ubuntu:~/Desktop$ <b>mkdir yourScripts</b>
+al@ubuntu:~/Desktop$ <b>ls</b>
+yourScripts
+<span epub:type="pagebreak" title="35" id="Page_35"/>al@ubuntu:~/Desktop$ <b>rmdir yourScripts</b>
+al@ubuntu:~/Desktop$ <b>ls</b>
+al@ubuntu:~/Desktop$</code></pre>
+<p>In this example, we created an empty folder named <em>yourScripts</em> and then removed it.</p>
+<p>To delete nonempty folders (along with all the folders and files it contains), run <code class="bold">rd /s/q <var>[source folder]</var></code>on Windows or <code class="bold">rm –rf </code><var>[source folder]</var> on macOS and Linux.</p>
+<h4 id="h3-279660c02-0011">Find Programs with where and which</h4>
+<p class="BodyFirst">Running <code>where </code><var>[program]</var> on Windows or <code>which </code><var>[program]</var> on macOS and Linux tells you the exact location of the program. When you enter a command on the command line, your computer checks for the program in the folders listed in the <code>PATH</code> environment variable (although Windows checks the cwd first).</p>
+<p>These commands can tell you which executable Python program is run when you enter <code>python</code> in the shell. If you have multiple Python versions installed, your computer might have several executable programs of the same name. The one that is run depends on the order of folders in your <code>PATH</code> environment variable, and the <code>where</code> and <code>which </code>commands will output it:</p>
+<pre><code>C:\Users\Al&gt;<b>where python</b>
+C:\Users\Al\AppData\Local\Programs\Python\Python38\python.exe</code></pre>
+<p>In this example, the folder name indicates that the Python version run from the shell is located at <em>C:\Users\Al\AppData\Local\Programs\Python\Python38\</em>.</p>
+<h4 id="h3-279660c02-0012">Clear the Terminal with cls and clear</h4>
+<p class="BodyFirst">Running <code>cls</code> on Windows or <code>clear</code> on macOS and Linux will clear all the text in the terminal window. This is useful if you simply want to start with a fresh-looking terminal window.</p>
+<h2 id="h1-279660c02-0004">Environment Variables and PATH</h2>
+<p class="BodyFirst">All running processes of a program, no matter the language in which it’s written, have a set of variables called <em>environment variables</em> that can store a string. Environment variables often hold systemwide settings that every program would find useful. For example, the <code>TEMP</code> environment variable holds the file path where any program can store temporary files. When the operating system runs a program (such as a command line), the newly created process receives its own copy of the operating system’s environment variables and values. You can change a process’s environment variables independently of the operating system’s set of environment variables. But those changes apply only to the process, not to the operating system or any other process. </p>
+<p><span epub:type="pagebreak" title="36" id="Page_36"/>I discuss environment variables in this chapter because one such variable, <code>PATH</code>, can help you run your programs from the command line.</p>
+<h3 id="h2-279660c02-0015">Viewing Environment Variables</h3>
+<p class="BodyFirst">You can see a list of the terminal window’s environment variables by running <code>set</code> (on Windows) or <code>env</code> (on macOS and Linux) from the command line:</p>
+<pre><code>C:\Users\Al&gt;<b>set</b>
+ALLUSERSPROFILE=C:\ProgramData
+APPDATA=C:\Users\Al\AppData\Roaming
+CommonProgramFiles=C:\Program Files\Common Files
+<var>--snip--</var>
+USERPROFILE=C:\Users\Al
+VBOX_MSI_INSTALL_PATH=C:\Program Files\Oracle\VirtualBox\
+windir=C:\WINDOWS</code></pre>
+<p>The text on the left side of the equal sign (<code>=</code>) is the environment variable name, and the text on the right side is the string value. Every process has its own set of environment variables, so different command lines can have different values for their environment variables.</p>
+<p>You can also view the value of a single environment variable with the <code>echo</code> command. Run <code><code class="bold">echo %HOMEPATH</code>%</code> on Windows or <code class="bold">echo $HOME</code> on macOS and Linux to view the value of the <code>HOMEPATH</code> or <code>HOME</code> environment variables, respectively, which contain the current user’s home folder. On Windows, it looks like this:</p>
+<pre><code>C:\Users\Al&gt;<b>echo %HOMEPATH%</b>
+\Users\Al</code></pre>
+<p>On macOS or Linux, it looks like this:</p>
+<pre><code>al@al-VirtualBox:~$ <b>echo $HOME</b>
+/home/al</code></pre>
+<p>If that process creates another process (such as when a command line runs the Python interpreter), that child process receives its own copy of the parent process’s environment variables. The child process can change the values of its environment variables without affecting the parent process’s environment variables, and vice versa. </p>
+<p>You can think of the operating system’s set of environment variables as the “master copy” from which a process copies its environment variables. The operating system’s environment variables change less frequently than a Python program’s. In fact, most users never directly touch their environment variable settings. </p>
+<h3 id="h2-279660c02-0016">Working with the PATH Environment Variable</h3>
+<p class="BodyFirst">When you enter a command, like <code>python</code> on Windows or <code>python3</code> on macOS and Linux, the terminal checks for a program with that name in the folder <span epub:type="pagebreak" title="37" id="Page_37"/>you’re currently in. If it doesn’t find it there, it will check the folders listed in the <code>PATH</code> environment variable.</p>
+<p>For example, on my Windows computer, the <em>python.exe</em> program file is located in the <em>C:\Users\Al\AppData\Local\Programs\Python\Python38</em> folder. To run it, I have to enter <code>C:\Users\Al\AppData\Local\Programs\Python\Python38\python.exe</code>, or switch to that folder first and then enter <code>python.exe</code>.</p>
+<p>This lengthy pathname requires a lot of typing, so instead I add this folder to the <code>PATH</code> environment variable. Then, when I enter <code>python.exe</code>, the command line searches for a program with this name in the folders listed in <code>PATH</code>, saving me from having to type the entire file path.</p>
+<p>Because environment variables can contain only a single string value, adding multiple folder names to the <code>PATH</code> environment variable requires using a special format. On Windows, semicolons separate the folder names. You can view the current <code>PATH</code> value with the <code>path</code> command:</p>
+<pre><code>C:\Users\Al&gt;<b>path</b>
+C:\Path;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;
+<var>--snip--</var>
+C:\Users\Al\AppData\Local\Microsoft\WindowsApps</code></pre>
+<p>On macOS and Linux, colons separate the folder names:</p>
+<pre><code>al@ubuntu:~$ <b>echo $PATH</b>
+/home/al/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin</code></pre>
+<p>The order of the folder names is important. If I have two files named <em>someProgram.exe</em> in <em>C:\WINDOWS\system32</em> and <em>C:\WINDOWS</em>, entering <code>someProgram.exe</code> will run the program in <em>C:\WINDOWS\system32</em> because that folder appears first in the <code>PATH</code> environment variable.</p>
+<p>If a program or command you enter doesn’t exist in the cwd or any of the directories listed in <code>PATH</code>, the command line will give you an error, such as <code>command not found</code> or <code>not recognized as an internal or external command</code>. If you didn’t make a typo, check which folder contains the program and see if it appears in the <code>PATH</code> environment variable.</p>
+<h3 id="h2-279660c02-0017">Changing the Command Line’s PATH Environment Variable</h3>
+<p class="BodyFirst">You can change the current terminal window’s <code>PATH</code> environment variable to include additional folders. The process for adding folders to <code>PATH</code> varies slightly between Windows and macOS/Linux. On Windows, you can run the <code>path</code> command to add a new folder to the current <code>PATH</code> value:</p>
+<pre><code><span class="CodeAnnotationHang">1</span> C:\Users\Al&gt;path C:\newFolder;%PATH%
+
+<span class="CodeAnnotationHang">2</span> C:\Users\Al&gt;path
+C:\newFolder;C:\Path;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;
+<var>--snip--</var>
+C:\Users\Al\AppData\Local\Microsoft\WindowsApps</code></pre>
+<p><span epub:type="pagebreak" title="38" id="Page_38"/>The <code>%PATH%</code> part <span class="CodeAnnotation">1</span> expands to the current value of the <code>PATH</code> environment variable, so you’re adding the new folder and a semicolon to the beginning of the existing <code>PATH</code> value. You can run the <code>path</code> command again to see the new value of <code>PATH</code><span class="CodeAnnotation">2</span>.</p>
+<p>On macOS and Linux, you can set the <code>PATH</code> environment variable with syntax similar to an assignment statement in Python:</p>
+<pre><code><span class="CodeAnnotationHang">1</span> al@al-VirtualBox:~$ PATH=/newFolder:$PATH
+<span class="CodeAnnotationHang">2</span> al@al-VirtualBox:~$ echo $PATH
+/newFolder:/home/al/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin</code></pre>
+<p>The <code>$PATH</code> part <span class="CodeAnnotation">1</span> expands to the current value of the <code>PATH</code> environment variable, so you’re adding the new folder and a colon to the existing <code>PATH</code> value. You can run the <code>echo $PATH</code> command again to see the new value of <code>PATH</code><span class="CodeAnnotation">2</span>.</p>
+<p>But the previous two methods for adding folders to <code>PATH</code> apply only to the current terminal window and any programs run from it after the addition. If you open a new terminal window, it won’t have your changes. Permanently adding folders requires changing the operating system’s set of environment variables.</p>
+<h3 id="h2-279660c02-0018">Permanently Adding Folders to PATH on Windows</h3>
+<p class="BodyFirst">Windows has two sets of environment variables: <em>system environment variables</em> (which apply to all users) and <em>user environment variables</em> (which override the system environment variable but apply to the current user only). To edit them, click the Start menu and then enter <code class="bold">Edit environment variables for your account</code>, which opens the Environment Variables window, as shown in <a id="figureanchor2-6" href="#figure2-6">Figure 2-6</a>.</p>
+<p>Select <b>Path</b> from the user variable list (not the system variable list), click <b>Edit</b>, add the new folder name in the text field that appears (don’t forget the semicolon separator), and click <b>OK</b>.</p>
+<p>This interface isn’t the easiest to work with, so if you’re frequently editing environment variables on Windows, I recommend installing the free Rapid Environment Editor software from <a href="https://www.rapidee.com/">https://www.rapidee.com/</a>. Note that after installing it, you must run this software as the administrator to edit system environment variables. Click the Start menu, type <code class="bold">Rapid Environment Editor</code>, right-click the software’s icon, and click <b>Run as administrator</b>.</p>
+<p>From the Command Prompt, you can permanently modify the system <code>PATH</code> variable using the <code>setx</code> command:</p>
+<pre><code>C:\Users\Al&gt;<b>setx /M PATH "C:\newFolder;%PATH%"</b></code></pre>
+<p>You’ll need to run the Command Prompt as the administrator to run the <code>setx</code> command.</p>
+<span epub:type="pagebreak" title="39" id="Page_39"/><figure>
+<img src="image_fi/279660c02/f02006.png" alt="f02006"/>
+<figcaption><p><a id="figure2-6" href="#figureanchor2-6">Figure 2-6:</a> The Environment Variables window on Windows</p></figcaption>
+</figure>
+<h3 id="h2-279660c02-0019">Permanently Adding Folders to PATH on macOS and Linux</h3>
+<p class="BodyFirst">To add folders to the <code>PATH</code> environment variables for all terminal windows on macOS and Linux, you’ll need to modify the <em>.bashrc</em> text file in your home folder and add the following line:</p>
+<pre><code>export PATH=/newFolder:$PATH</code></pre>
+<p>This line modifies <code>PATH</code> for all future terminal windows. On macOS Catalina and later versions, the default shell program has changed from Bash to Z Shell, so you’ll need to modify <em>.zshrc</em> in the home folder instead.</p>
+<h2 id="h1-279660c02-0005">Running Python Programs Without the Command Line</h2>
+<p class="BodyFirst">You probably already know how to run programs from whatever launcher your operating system provides. Windows has the Start menu, macOS has the Finder and Dock, and Ubuntu Linux has Dash. Programs will add themselves to these launchers when you install them. You can also double-click a program’s icon in a file explorer app (such as File Explorer on Windows, Finder on macOS, and Files on Ubuntu Linux) to run them.</p>
+<p><span epub:type="pagebreak" title="40" id="Page_40"/>But these methods don’t apply to your Python programs. Often, double-clicking a <em>.py</em> file will open the Python program in an editor or IDE instead of running it. And if you try running Python directly, you’ll just open the Python interactive shell. The most common way of running a Python program is opening it in an IDE and clicking the Run menu option or executing it in the command line. Both methods are tedious if you simply want to launch a Python program.</p>
+<p>Instead, you can set up your Python programs to easily run them from your operating system’s launcher, just like other applications you’ve installed. The following sections detail how to do this for your particular operating system.</p>
+<h3 id="h2-279660c02-0020">Running Python Programs on Windows</h3>
+<p class="BodyFirst">On Windows, you can run Python programs in a few other ways. Instead of opening a terminal window, you can press <span class="KeyCaps">win</span>-R to open the Run dialog and enter <code class="bold">py</code><var class="bold"> C:\path\to\yourScript.py</var>, as shown in <a id="figureanchor2-7" href="#figure2-7">Figure 2-7</a>. The <em>py.exe</em> program is installed at <em>C:\Windows\py.exe</em>, which is already in the <code>PATH</code> environment variable, and the <em>.exe</em> file extension is optional when you are running programs.</p>
+<figure>
+<img src="image_fi/279660c02/f02007.png" alt="f02007"/>
+<figcaption><p><a id="figure2-7" href="#figureanchor2-7">Figure 2-7:</a> The Run dialog on Windows</p></figcaption>
+</figure>
+<p>Still, this method requires you to enter your script’s full path. Also, the terminal window that displays the program’s output will automatically close when the program ends, and you might miss some output. </p>
+<p>You can solve these problems by creating a <em>batch script</em>, which is a small text file with the <em>.bat</em> file extension that can run multiple terminal commands at once, much like a shell script in macOS and Linux. You can use a text editor, such as Notepad, to create these files. Make a new text file containing the following two lines:</p>
+<pre><code>@py.exe <var>C:\path\to\yourScript.py</var> %*
+@pause</code></pre>
+<p><span epub:type="pagebreak" title="41" id="Page_41"/>Replace this path with the absolute path to your program, and save this file with a <em>.bat</em> file extension (for example, <em>yourScript.bat</em>). The <code>@</code> sign at the start of each command prevents it from being displayed in the terminal window, and the <code>%*</code> forwards any command line arguments entered after the batch filename to the Python script. The Python script, in turn, reads the command line arguments in the <code>sys.argv</code> list. This batch file will spare you from having to type the Python program’s full absolute path every time you want to run it. The <code>@pause</code> command adds <code>Press any key to continue...</code> to the end of the Python script to prevent the program’s window from disappearing too quickly. </p>
+<p>I recommend you place all of your batch and <em>.py</em> files in a single folder that already exists in the <code>PATH</code> environment variable, such as your home folder at <em>C:\Users\&lt;USERNAME&gt;</em>. With a batch file set up, you can run your Python script by simply pressing <span class="KeyCaps">win</span>-R, entering the name of your batch file (entering the <em>.bat</em> file extension is optional), and pressing <span class="KeyCaps">Enter</span>.</p>
+<h3 id="h2-279660c02-0021">Running Python Programs on macOS</h3>
+<p class="BodyFirst">On macOS, you can create a shell script to run your Python scripts by creating a text file with the <em>.command</em> file extension. Make one in a text editor, such as TextEdit, and add the following content:</p>
+<pre><code>#!/usr/bin/env bash
+python3 <var>/path/to/yourScript.py</var></code></pre>
+<p>Save this file in your home folder. In a terminal window, make this shell script executable by running <code>chmod u+x </code><var>yourScript.command</var>. Now you should be able to click the Spotlight icon (or press <span class="KeyCaps">Command</span>-<span class="KeyCaps">Space</span>) and enter the name of your shell script to run it. The shell script, in turn, will run your Python script.</p>
+<h3 id="h2-279660c02-0022">Running Python Programs on Ubuntu Linux</h3>
+<p class="BodyFirst">There isn’t a quick way to run your Python scripts on Ubuntu Linux like there is in Windows and macOS, although you can shorten some of the steps involved. First, make sure your <em>.py</em> file is in your home folder. Second, add this line as the first line of your <em>.py</em> file:</p>
+<pre><code>#!/usr/bin/env python3</code></pre>
+<p>This is called a <em>shebang line</em>, and it tells Ubuntu that when you run this file, you want to use <code>python3</code> to run it. Third, add the execute permission to this file by running the <code>chmod</code> command from the terminal:</p>
+<pre><code>al@al-VirtualBox:~$ <b>chmod u+x yourScript.py</b></code></pre>
+<p>Now whenever you want to quickly run your Python script, you can press <span class="KeyCaps">Ctrl-Alt-</span>T to open a new terminal window. This terminal will be <span epub:type="pagebreak" title="42" id="Page_42"/>set to the home folder, so you can simply enter <code>./yourScript.py</code> to run this script. The <code>./</code> is required because it tells Ubuntu that <em>yourScript.py</em> exists in the cwd (the home folder, in this case).</p>
+<h2 id="h1-279660c02-0006">Summary</h2>
+<p class="BodyFirst">Environment setup involves all the steps necessary to get your computer into a state where you can easily run your programs. It requires you to know several low-level concepts about how your computer works, such as the filesystem, file paths, processes, the command line, and environment variables.</p>
+<p>The filesystem is how your computer organizes all the files on your computer. A file is a complete, absolute file path or a file path relative to the cwd. You’ll navigate the filesystem through the command line. The command line has several other names, such as terminal, shell, and console, but they all refer to the same thing: the text-based program that lets you enter commands. Although the command line and the names of common commands are slightly different between Windows and macOS/Linux, they effectively perform the same tasks.</p>
+<p>When you enter a command or program name, the command line checks the folders listed in the <code>PATH</code> environment variable for the name. This is important to understand to figure out any <code>command not found</code> errors you might encounter. The steps for adding new folders to the <code>PATH</code> environment variable are also slightly different between Windows and macOS/Linux.</p>
+<p>Becoming comfortable with the command line takes time because there are so many commands and command line arguments to learn. Don’t worry if you spend a lot of time searching for help online; this is what experienced software developers do every day.</p>
+</section>
+</body>
+</html>
